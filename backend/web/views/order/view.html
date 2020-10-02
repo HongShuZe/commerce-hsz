@@ -1,0 +1,50 @@
+<div class="page-head">
+    <h2 class="page-head-title">订单管理</h2>
+</div>
+<div class="main-content container-fluid">
+    <div class="row">
+        <!--Responsive table-->
+        <div class="col-sm-12">
+            <div class="panel panel-default panel-table">
+                <div class="panel-heading">订单列表
+
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive noSwipe">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                            <tr>
+                                <th style="width:15%;">订单ID</th>
+                                <th style="width:15%;">用户名称</th>
+                                <th style="width:15%;">商品名称</th>
+                                <th style="width:15%;">购买数量</th>
+                                <th style="width:15%;">总金额</th>
+                                <th style="width:10%;">发货状态</th>
+                                <th style="width:20%;">操作</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{/*order是后端传过来的"order": orderArray,*/}}
+                            {{range $i, $v := .order}}
+                            <tr>
+                                {{/*v.id的id和后端传来的结构体属性名一样*/}}
+                                <td class="user-avatar cell-detail user-info">{{$v.id}}</td>
+                                <td class="cell-detail"></td>
+                                <td class="milestone"> {{$v.product_name}}</td>
+                                <td class="cell-detail"></td>
+                                <td class="cell-detail"></td>
+                                <td class="cell-detail">{{ if eq $v.status "1"}} 已发货 {{else}} 未发货 {{end}}</td>
+                                <td class="cell-detail">
+                                    <a href="/order/manager?id={{$v.id}}"><button class="btn btn-space btn-primary">修改</button></a>
+                                    <a href="/order/delete?id={{$v.id}}"><button class="btn btn-space btn-danger">删除</button></a>
+                                </td>
+                            </tr>
+                            {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

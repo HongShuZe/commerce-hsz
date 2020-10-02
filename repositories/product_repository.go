@@ -39,7 +39,7 @@ func (p *ProductManager)Conn() (err error) {
 	}
 
 	if p.table == "" {
-		p.table = "product"
+		p.table = "tbl_product"
 	}
 	return
 }
@@ -52,14 +52,15 @@ func (p *ProductManager)Insert(product *datamodels.Product)(int64,error) {
 		return 0, err
 	}
 	// sql预编译
-	sql := "insert product set productName=?, productNum=?, productImage=?, productUrl=?"
+	sql := "insert ignore into tbl_product (`product_name`,`product_num`,`product_image`,`product_url`,`product_price`,`product_info`,`status`) values(?,?,?,?,?,?,0) "
 	stmt, err := p.mysqlConn.Prepare(sql)
-	defer stmt.Close()
 	if err != nil {
 		return 0, err
 	}
+	defer stmt.Close()
+
 	// 传入参数
-	result, err := stmt.Exec(product.ProductName, product.ProductNum, product.ProductImage, product.ProductUrl)
+	result, err := stmt.Exec(product.ProductName, product.ProductNum, product.ProductImage, product.ProductUrl, product.ProductPrice, product.ProductInfo)
 	if err != nil {
 		return 0, err
 	}
@@ -74,12 +75,12 @@ func (p *ProductManager)Delete(id int64)(bool) {
 		return false
 	}
 
-	sql := "delete from product where ID=?"
+	sql := "update tbl_product set status=1 where id=?"
 	stmt, err := p.mysqlConn.Prepare(sql)
-	defer stmt.Close()
 	if err != nil {
 		return false
 	}
+	defer stmt.Close()
 
 	_, err = stmt.Exec(strconv.FormatInt(id, 10))
 	if err != nil {
@@ -96,13 +97,14 @@ func (p *ProductManager)Update(product *datamodels.Product)(error) {
 		return err
 	}
 
-	sql := "update product set productName=?, productNum=?, productImage=?, productUrl=? where ID=?"
+	sql := "update tbl_product set product_name=?, product_num=?, product_image=?, product_url=?, product_price=?, product_info=? where id=?"
 	stmt, err := p.mysqlConn.Prepare(sql)
-	defer stmt.Close()
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(product.ProductName, product.ProductNum, product.ProductImage, product.ProductUrl, strconv.FormatInt(product.ID, 10))
+	defer stmt.Close()
+
+	_, err = stmt.Exec(product.ProductName, product.ProductNum, product.ProductImage, product.ProductUrl, product.ProductPrice, product.ProductInfo,product.ID)
 	if err != nil {
 		return err
 	}
@@ -117,12 +119,13 @@ func (p *ProductManager)SelectOne(id int64)(*datamodels.Product ,error) {
 		return &datamodels.Product{}, err
 	}
 
-	sql := "select * from "+ p.table+" where ID=" + strconv.FormatInt(id, 10)
+	sql := "select * from tbl_product where status=0 and id=" + strconv.FormatInt(id, 10)
 	stmt, err := p.mysqlConn.Query(sql)
-	defer stmt.Close()
 	if err != nil {
 		return &datamodels.Product{}, err
 	}
+	defer stmt.Close()
+
 	result := common.GetResultRow(stmt)
 	if len(result) == 0 {
 		return &datamodels.Product{}, nil
@@ -140,12 +143,13 @@ func (p *ProductManager)SelectAll()([]*datamodels.Product ,error) {
 		return nil, err
 	}
 
-	sql := "select * from "+ p.table
+	sql := "select * from tbl_product where status=0"
 	stmt, err := p.mysqlConn.Query(sql)
-	defer stmt.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer stmt.Close()
+
 	result := common.GetResultRows(stmt)
 	if len(result) == 0 {
 		return nil, nil

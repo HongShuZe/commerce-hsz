@@ -1,5 +1,5 @@
 <div class="page-head">
-    <h2 class="page-head-title">商品管理</h2>
+    <h2 class="page-head-title">订单管理</h2>
 
 </div>
 
@@ -9,43 +9,36 @@
             <div class="panel panel-default panel-border-color panel-border-color-primary">
                 <div class="panel-heading panel-heading-divider">商品详细<span class="panel-subtitle">可以修改商品详情</span></div>
                 <div class="panel-body">
-                    <form action="/product/update" style="border-radius: 0px;" class="form-horizontal group-border-dashed" method="post" >
-                        <input type="text" name="ID" value="{{.product.ID}}" hidden>
+                    <form action="/order/update" style="border-radius: 0px;" class="form-horizontal group-border-dashed" method="post" >
+                        <input type="text" name="ID" value="{{.order.ID}}" hidden>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">商品名称</label>
+                            <label class="col-sm-3 control-label">商品id</label>
                             <div class="col-sm-6">
-                                {{/*name要和属性设置的标签名一样*/}}
-                                <input type="text" class="form-control" name="product_name" value="{{.product.ProductName}}">
+                                <input type="text" class="form-control" name="product_id" value="{{.order.ProductID}}">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">商品数量</label>
+                            <label class="col-sm-3 control-label">买家id</label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" name="product_num" value="{{.product.ProductNum}}">
+                                <input type="text" class="form-control" name="user_id" value="{{.order.UserID}}">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">商品图片地址</label>
+                            <label class="col-sm-3 control-label">购买数量</label>
                             <div class="col-sm-6">
-                                <input type="text"   class="form-control" name="product_image" value="{{.product.ProductImage}}">
+                                <input type="text"   class="form-control" name="order_num" value="{{.order.OrderNum}}">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">商品访问链接</label>
+                            <label class="col-sm-3 control-label">总金额</label>
                             <div class="col-sm-6">
-                                <input type="text"   class="form-control" name="product_url" value="{{.product.ProductUrl}}">
+                                <input type="text"   class="form-control" name="total_price" value="{{.order.TotalPrice}}">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">商品价格</label>
+                            <label class="col-sm-3 control-label">status</label>
                             <div class="col-sm-6">
-                                <input type="text"   class="form-control" name="product_price"  value="{{.product.ProductPrice}}">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">商品简介</label>
-                            <div class="col-sm-6">
-                                <input type="text"   class="form-control" name="product_info" value="{{.product.ProductInfo}}" >
+                                <input type="text"   class="form-control" name="status"  value="{{.order.Status}}">
                             </div>
                         </div>
                         <div class="row xs-pt-15">

@@ -34,12 +34,17 @@ func main()  {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	proRepository := repositories.NewProductManager("product", db)
+	proRepository := repositories.NewProductManager("tbl_product", db)
 	proService := services.NewProductService(proRepository)
-	proParty := app.Party("/product")
-	pro := mvc.New(proParty)
+	pro := mvc.New(app.Party("/product"))
 	pro.Register(ctx, proService)
 	pro.Handle(new(controllers.ProductController))
+
+	orderRepository := repositories.NewOrderManager("tbl_order", db)
+	orderService := services.NewOrderService(orderRepository)
+	order := mvc.New(app.Party("/order"))
+	order.Register(ctx, orderService)
+	order.Handle(new(controllers.OrderController))
 
 	app.Run(
 		iris.Addr("localhost:8080"),

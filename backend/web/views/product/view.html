@@ -15,20 +15,25 @@
                             <thead>
                             <tr>
                                 <th style="width:10%;">商品ID</th>
-                                <th style="width:17%;">商品图片</th>
-                                <th style="width:25%;">商品名称</th>
-                                <th style="width:25%;">商品链接</th>
-                                <th style="width:30%;">操作</th>
+                                <th style="width:15%;">商品图片</th>
+                                <th style="width:15%;">商品名称</th>
+                                <th style="width:15%;">商品链接</th>
+                                <th style="width:15%;">商品数量</th>
+                                <th style="width:15%;">商品价格</th>
+                                <th style="width:20%;">操作</th>
                             </tr>
                             </thead>
                             <tbody>
                             {{range $i, $v := .productArray}}
                             <tr>
+                                {{/*v.ID的ID和后端传来的结构体属性名一样*/}}
                                 <td class="user-avatar cell-detail user-info">{{$v.ID}}</td>
                                 <td class="cell-detail"><img src="{{$v.ProductImage}}" alt="Avatar"> </td>
                                 <td class="milestone"> {{$v.ProductName}}
                                 </td>
                                 <td class="cell-detail">{{$v.ProductUrl}}</td>
+                                <td class="cell-detail">{{$v.ProductNum}}</td>
+                                <td class="cell-detail">{{$v.ProductPrice}}</td>
                                 <td class="cell-detail">
                                     <a href="/product/manager?id={{$v.ID}}"><button class="btn btn-space btn-primary">修改</button></a>
                                     <a href="/product/delete?id={{$v.ID}}"><button class="btn btn-space btn-danger">删除</button></a>

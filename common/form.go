@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const tagName = "goods"
+const tagName = "sql"
 
 // pathMap holds the values of a map with its key and values correspondent
 type pathMap struct {
@@ -40,7 +40,7 @@ type Error struct {
 }
 
 func (s *Error) Error() string {
-	return "goods: " + s.err.Error()
+	return "sql: " + s.err.Error()
 }
 
 func (s Error) MarshalJSON() ([]byte, error) {
