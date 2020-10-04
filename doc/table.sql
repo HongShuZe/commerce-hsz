@@ -45,7 +45,7 @@ CREATE TABLE `tbl_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nick_name` varchar(255) DEFAULT NULL COMMENT '昵称',
   `user_name` varchar(255) DEFAULT NULL COMMENT '用户名',
-  `pass_word` varchar(255) DEFAULT NULL COMMENT '用户密码',
+  `password` varchar(255) DEFAULT NULL COMMENT '用户密码',
   `user_balance` int(11) DEFAULT NULL COMMENT '用户余额',
   `user_type` int(11) DEFAULT NULL COMMENT '用户类型(0 买家/1 卖家等状态)',
   `signup_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建用户日期',
@@ -53,7 +53,7 @@ CREATE TABLE `tbl_user` (
   `status` int(11) DEFAULT NULL COMMENT '用户帐号状态(0可用/1已注销等状态)',
   `ext1` text COMMENT '备用字段1',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `idx_nickname` (`nick_name`),
+  UNIQUE KEY `idx_user_name` (`user_name`),
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
