@@ -5,8 +5,6 @@ import (
 	"commerce-hsz/common"
 	"github.com/opentracing/opentracing-go/log"
 	"context"
-	"github.com/kataras/iris/v12/sessions"
-	"time"
 	"commerce-hsz/repositories"
 	"commerce-hsz/services"
 	"github.com/kataras/iris/v12/mvc"
@@ -35,17 +33,14 @@ func main()  {
 	if err != nil {
 		log.Error(err)
 	}
-	sess := sessions.New(sessions.Config{
-		Cookie:"AdminCookie",
-		Expires:600*time.Minute,
-	})
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	userManager := repositories.NewUserRepositry("tbl_user", db)
 	userService := services.NewService(userManager)
 	user := mvc.New(app.Party("/user"))
-	user.Register(userService, ctx, sess.Start)
+	user.Register(userService, ctx)
 	user.Handle(new(controllers.UserController))
 
 	productManager := repositories.NewProductManager("tbl_product", db)

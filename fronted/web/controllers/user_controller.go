@@ -8,6 +8,7 @@ import (
 	"github.com/kataras/iris/v12/mvc"
 	"github.com/kataras/iris/v12/sessions"
 	"strconv"
+	"commerce-hsz/encrypt"
 )
 
 type UserController struct {
@@ -63,9 +64,18 @@ func (c *UserController) PostLogin() mvc.Response {
 		}
 	}
 
+	// 将用户id写入cookie中
 	tool.GlobalCookie(c.Ctx, "uid", strconv.Itoa(user.ID))
+	// 加密用户id
+	uidByte := []byte(strconv.Itoa(user.ID))
+	uidString, err := encrypt.EnPwdCode(uidByte)
+	if err != nil {
+		c.Ctx.Application().Logger().Debug(err)
+	}
 	// todo 不是很清楚c.Session.Set
-	c.Session.Set("uid", strconv.Itoa(user.ID))
+	//c.Session.Set("uid", strconv.Itoa(user.ID))
+	// 将加密的用户id写入cookie中
+	tool.GlobalCookie(c.Ctx, "sign", uidString)
 
 	return mvc.Response{
 		Path: "/product/detail",
