@@ -15,6 +15,7 @@ type IProduct interface {
 	Update(*datamodels.Product)(error)
 	SelectOne(int64)(*datamodels.Product, error)
 	SelectAll()([]*datamodels.Product, error)
+	SubProductNum(int64) error
 }
 
 // 实现类
@@ -163,6 +164,27 @@ func (p *ProductManager)SelectAll()([]*datamodels.Product ,error) {
 	}
 
 	return productArray, nil
+}
+
+func (p *ProductManager)SubProductNum(productID int64) error  {
+	err := p.Conn()
+	if err != nil {
+		return err
+	}
+
+	sql := "update tbl_product set product_num=product_num-1 where id=?"
+	stmt, err := p.mysqlConn.Prepare(sql)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(productID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 
