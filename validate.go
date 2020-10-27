@@ -14,6 +14,7 @@ import (
 	"commerce-hsz/datamodels"
 	"encoding/json"
 	"log"
+	"time"
 )
 
 // 设置集群地址, 最好内部IP
@@ -22,7 +23,8 @@ var hostArray = []string{"192.168.20.143", "192.168.20.143"}
 
 var localHost = ""
 // 数量控制接口服务器内网IP，或者getOne的SLB内网IP
-var GetOneIp = "47.112.245.134"
+var GetOneIp = "127.0.0.1"
+// 47.112.245.134
 
 var GetOnePort = "8084"
 
@@ -35,29 +37,52 @@ var rmqValidate *rabbitmq.RabbitMQ
 // 用来存放控制信息
 type AccessControl struct {
 	// 用来存放用户想要的存放的信息
-	sourcesArray map[int]interface{}
+	sourcesArray map[int]time.Time
 	sync.RWMutex
 }
 
 // 创建全局变量
 var accessControl = &AccessControl{
-	sourcesArray: make(map[int]interface{}),
+	sourcesArray: make(map[int]time.Time),
 }
 
 // 获取定制的数据
-func (m *AccessControl)GetNewRecord(uid int) interface{} {
+func (m *AccessControl)GetNewRecord(uid int) time.Time {
 	m.RWMutex.RLock()
 	defer m.RWMutex.RUnlock()
-	data := m.sourcesArray[uid]
-	return data
+	return m.sourcesArray[uid]
 }
 
 // 设置记录
 func (m *AccessControl)SetNewRecord(uid int)  {
 	m.RWMutex.Lock()
-	m.sourcesArray[uid]="hello hszz"
+	m.sourcesArray[uid]=time.Now()
 	m.RWMutex.Unlock()
 }
+
+// 黑名单结构体
+type BlackList struct {
+	listArray map[int]bool
+	sync.RWMutex
+}
+// 初始化黑名单
+var blackList = &BlackList{listArray: make(map[int]bool)}
+
+// 获取黑名单
+func (m *BlackList)GetBlackList(uid int) bool {
+	m.RLock()
+	defer m.RUnlock()
+	return m.listArray[uid]
+}
+
+// 获取黑名单
+func (m *BlackList)SetBlackList(uid int) bool {
+	m.Lock()
+	defer m.Unlock()
+	m.listArray[uid] = true
+	return true
+}
+
 
 // 判断服务器所在位置
 func (m *AccessControl)GetDistributedRight(req *http.Request) bool {
@@ -90,16 +115,28 @@ func (m *AccessControl)GetDistributedRight(req *http.Request) bool {
 
 // 获取本机map, 并且处理业务逻辑, 返回bool
 func (m *AccessControl)GetDataFromMap(uid string) bool {
-	/*uidInt, err := strconv.Atoi(uid)
+	uidInt, err := strconv.Atoi(uid)
 	if err != nil {
+		log.Println(err)
 		return false
 	}
-	data := m.GetNewRecord(uidInt)
+	// 判断是否被加入黑名单中
+	if blackList.GetBlackList(uidInt) {
+		log.Println("该用户已被加入黑名单")
+		return false
+	}
 
-	if data != nil {
-		return true
-	}*/
-
+	// 获取记录
+	dataRecord := m.GetNewRecord(uidInt)
+	// 判断时间是否为零
+	if !dataRecord.IsZero() {
+		// 业务判断, 是否在指定时间之后(限制抢购时间间隔)
+		if dataRecord.Add(time.Duration(20)*time.Second).After(time.Now()) {
+			return false
+		}
+	}
+	// 添加记录
+	m.SetNewRecord(uidInt)
 	return true
 }
 
@@ -177,30 +214,32 @@ func Check(w http.ResponseWriter, r *http.Request)  {
 	fmt.Println("执行check!")
 
 	queryForm, err := url.ParseQuery(r.URL.RawQuery)
-	// todo 这里报错, 明天继续
+	// todo
 	if err != nil || len(queryForm["productID"]) <= 0 {
 		w.Write([]byte("false"))
+		log.Println(err)
 		return
 	}
 
 	productString := queryForm["productID"][0]
-	fmt.Println("productString" + productString)
+	// fmt.Println("productString" + productString)
 
 	// 获取用户cookie
 	userCookie, err := r.Cookie("uid")
 	if err != nil {
 		w.Write([]byte("false"))
+		log.Println(err)
 		return
 	}
-	fmt.Println(0)
+
 	// 1.分布式权限验证
 	right := accessControl.GetDistributedRight(r)
 	if right == false {
-		fmt.Println(1)
+		log.Println("分布式权限验证err")
 		w.Write([]byte("false"))
 		return
 	}
-	fmt.Println(2)
+
 	// 2.获取数量控制权限, 防止秒杀出现超卖现象
 	hostUrl := "http://" + GetOneIp + ":" + GetOnePort + "/getOne"
 	// http://172.28.21.91:8084/getOne
@@ -210,7 +249,7 @@ func Check(w http.ResponseWriter, r *http.Request)  {
 		w.Write([]byte("false"))
 		return
 	}
-	fmt.Println(4)
+
 	// 判断数量控制接口请求状态
 	if responseValidate.StatusCode == 200 {
 		if string(validateBody) == "true" {
@@ -218,12 +257,14 @@ func Check(w http.ResponseWriter, r *http.Request)  {
 			// 1.获取商品ID
 			productID, err := strconv.ParseInt(productString, 10, 64)
 			if err != nil {
+				log.Println(err)
 				w.Write([]byte("false"))
 				return
 			}
 			// 2.获取用户ID
 			userID, err := strconv.ParseInt(userCookie.Value, 10, 64)
 			if err != nil {
+				log.Println(err)
 				w.Write([]byte("false"))
 				return
 			}
@@ -232,6 +273,7 @@ func Check(w http.ResponseWriter, r *http.Request)  {
 			// 类型转换
 			byteMessage, err := json.Marshal(message)
 			if err != nil {
+				log.Println(err)
 				w.Write([]byte("false"))
 				return
 			}
@@ -239,6 +281,7 @@ func Check(w http.ResponseWriter, r *http.Request)  {
 			// 生产消息
 			err = rmqValidate.PublishSimple(string(byteMessage))
 			if err != nil {
+				log.Println(err)
 				w.Write([]byte("false"))
 				return
 			}
@@ -246,6 +289,7 @@ func Check(w http.ResponseWriter, r *http.Request)  {
 			return
 		}
 	}
+	log.Println("getOne failed")
 	w.Write([]byte("false"))
 	return
 }
@@ -314,6 +358,10 @@ func main()  {
 	rmqValidate = rabbitmq.NewRabbitMQSimple("order_product")
 	defer rmqValidate.Destory()
 
+	// 设置静态文件目录
+	http.Handle("/html/", http.StripPrefix("/html/", http.FileServer(http.Dir("./fronted/web/htmlProductShow"))))
+	// 设置资源目录
+	http.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir("./fronted/web/public"))))
 	// 1.过滤器
 	filter := common.NewFilter()
 	// 注册拦截

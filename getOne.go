@@ -41,6 +41,7 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("true"))
 		return
 	}
+	log.Println("##################GetProduct")
 	w.Write([]byte("false"))
 	return
 }
